@@ -1,11 +1,119 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>l</title>
+    <meta charset="UTF-8">
+    <title>Sploop.io Multibox Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid black;
+            background-color: #87ceeb;
+        }
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Sploop Multibox Demo</h1>
-    <p>Open your browser console (F12) and type <code>addBot()</code> or <code>removeBot()</code> to test.</p>
-    <script src="multibox.js"></script>
+    <h1>Sploop.io Multibox Demo</h1>
+    <p>Use the buttons to add or remove bots. The red square is your main player, blue squares are bots.</p>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <br>
+    <button onclick="addBot()">Add Bot</button>
+    <button onclick="removeBot()">Remove Bot</button>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Configuration
+        const MAIN_PLAYER = { x: 400, y: 300, size: 20, color: 'red' }; // Main player (red square)
+        let bots = []; // Array to hold bot objects
+
+        // Bot class
+        class Bot {
+            constructor(id) {
+                this.id = id;
+                this.x = Math.random() * (canvas.width - 20); // Random starting position
+                this.y = Math.random() * (canvas.height - 20);
+                this.size = 15;
+                this.color = 'blue';
+                console.log(`Bot ${id} spawned at (${this.x}, ${this.y})`);
+            }
+
+            // Move toward main player
+            update() {
+                const dx = MAIN_PLAYER.x - this.x;
+                const dy = MAIN_PLAYER.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 30) { // Stop if close enough
+                    this.x += dx * 0.05; // Move 5% of the distance each frame
+                    this.y += dy * 0.05;
+                }
+            }
+
+            // Draw bot on canvas
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+            }
+        }
+
+        // Initial bots
+        for (let i = 1; i <= 3; i++) {
+            bots.push(new Bot(i));
+        }
+
+        // Add bot function
+        window.addBot = function() {
+            const newBotId = bots.length + 1;
+            bots.push(new Bot(newBotId));
+            console.log(`Added bot ${newBotId}`);
+        };
+
+        // Remove bot function
+        window.removeBot = function() {
+            if (bots.length > 0) {
+                const removedBot = bots.pop();
+                console.log(`Removed bot ${removedBot.id}`);
+            }
+        };
+
+        // Main player movement (controlled by mouse)
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            MAIN_PLAYER.x = event.clientX - rect.left;
+            MAIN_PLAYER.y = event.clientY - rect.top;
+        });
+
+        // Animation loop
+        function animate() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw main player
+            ctx.fillStyle = MAIN_PLAYER.color;
+            ctx.fillRect(MAIN_PLAYER.x - MAIN_PLAYER.size / 2, MAIN_PLAYER.y - MAIN_PLAYER.size / 2, MAIN_PLAYER.size, MAIN_PLAYER.size);
+
+            // Update and draw bots
+            bots.forEach(bot => {
+                bot.update();
+                bot.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+    </script>
 </body>
 </html>
